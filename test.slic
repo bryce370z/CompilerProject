@@ -1,0 +1,6 @@
+main;
+	data:
+		integer: List[10], X, Y;
+	algorithm:
+	X :=  6 & 9.7;
+end main;
