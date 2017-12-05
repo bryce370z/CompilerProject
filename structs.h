@@ -1,10 +1,11 @@
 
 /* used for symbol table */
 struct symbol {
-    char *name;
-    char *datatype;
+    char* name;
+    char* datatype;
+    int dt_num;
     int address;
-    char *kind;
+    char* kind;
     /* int size; */
 };
 
@@ -14,10 +15,11 @@ struct statement{
   int kind; // kind of statment {while, if, assignment, etc...}
   char *var; // variable name for assignemnt statment
   int var_address; // variable address for assignment statements
-  struct expression * var_array_expresssion;
-  struct expression * expression;
-  struct statement * body;
-  struct statement * next;
+  struct symbol* left_operand;
+  struct expression* var_array_expresssion;
+  struct expression* expression;
+  struct statement* body;
+  struct statement* next;
 };
 
 #define NUM_KIND 0
@@ -55,26 +57,10 @@ struct expression{
   char *var_name;// name of variable on left side of assign operator
   int datatype; // datatype of node
   int converted;
-  struct expression * left_op;
-  struct expression * right_op;
+  struct symbol* var;
+  struct expression* left_op;
+  struct expression* right_op;
 };
 
 extern struct statement * stmt_list;
 extern struct symbol symbol_array[500];
-/*
-
-node {
-int kind //applies to both
-int op_kind //operator
-int val //constant
-struct node * left_op
-struct node * right_op
-}
-
-struct stmt{
-int kind
-struct expr * expr
-struct stmt * body
-struct stmt * next
-}
-*/

@@ -6,13 +6,9 @@
 
 void codegen();
 void exprgen(struct expression *);
-int find_symbol_address(struct symbol *symbol_p, char *s);
 void allocate_stack_space(struct symbol *symbol_p);
-// void gen_expr_child_datatypes(struct expression *p);
-int gen_expr_datatype(struct expression *p);
-char* find_symbol_dt(struct symbol *symbol_p, char *s);
+void get_symbol(struct symbol* left_operand, struct symbol* symbol_p, char *s);
 void convert_datatypes(struct expression *p, int convert_index);
-void assign_datatypes(struct expression *p);
 
 char* instructions[20480];
 int instruction_index = 0;
@@ -64,14 +60,27 @@ void codegen(){
   while(p != NULL){
     int kind = p->kind;
     if(kind == STMT_ASSIGN){
-      int var_address = find_symbol_address(symbol_array, p->var);
-      if(var_address != -1){
+      p->left_operand = malloc(sizeof(struct symbol));
+      get_symbol(p->left_operand, symbol_array, p->var);
+      if(p->left_operand->name != NULL){
+        int var_address = p->left_operand->address;
         add_code_int("LAA", var_address);
         if(p->var_array_expresssion != NULL){
           exprgen(p->var_array_expresssion);
+          if(p->var_array_expresssion->datatype == DT_FLOAT){
+            add_code("FTI");
+          }
           add_code("ADI");
         }
         exprgen(p->expression);
+        if(p->left_operand->dt_num != p->expression->datatype){
+          if(p->left_operand->dt_num == DT_INTEGER){
+            add_code("FTI");
+          }
+          else{
+            add_code("ITF");
+          }
+        }
         add_code("STO");
       }
       else{
@@ -86,6 +95,7 @@ void codegen(){
 
 void exprgen(struct expression *p)
 {
+  int convert_index = 0;
   if(p->kind == NUM_KIND){
     if(p->datatype == DT_INTEGER){
       add_code_int("LLI", p->value);
@@ -95,8 +105,10 @@ void exprgen(struct expression *p)
     }
   }
   else if(p->kind == VAR_KIND){
-    int var_address = find_symbol_address(symbol_array, p->var_name);
-    if(var_address != -1){
+    p->var = malloc(sizeof(struct symbol));
+    get_symbol(p->var, symbol_array, p->var_name);
+    if(p->var->name != NULL){
+      int var_address = p->var->address;
       add_code_int("LAA", var_address);
       add_code("LOD");
     }
@@ -106,15 +118,15 @@ void exprgen(struct expression *p)
     }
   }
   else if(p->kind == ARRAY_KIND){
-    int var_address = find_symbol_address(symbol_array, p->var_name);
-    if(var_address != -1){
+    get_symbol(p->var, symbol_array, p->var_name);
+    if(p->var->name != NULL){
+      int var_address = p->var->address;
       add_code_int("LAA", var_address);
       exprgen(p->right_op);
       add_code("LOD");
     }
   }
    else {
-      int convert_index = 0;
       switch (p->op_kind) {
          case ADD_OP:
           exprgen(p->left_op);
@@ -299,6 +311,8 @@ void exprgen(struct expression *p)
             add_code("NEF");
           }
           add_code("ADI");
+          add_code("LLI 0");
+          add_code("NEI");
           break;
         case NOT_OP:
           exprgen(p->right_op);
@@ -320,7 +334,7 @@ void allocate_stack_space(struct symbol *symbol_p){
   int increment_stack = 0;
   for(int i = 0; i < 500; i++){
     if(symbol_p[i].name != NULL){
-      increment_stack++;
+      increment_stack = symbol_p[i].address;
     }
     else{
       add_code_int("ISP", increment_stack);
@@ -345,14 +359,21 @@ void convert_datatypes(struct expression *p, int convert_index){
   }
 }
 
-int find_symbol_address(struct symbol *symbol_p, char *s){
+void get_symbol(struct symbol* left_operand, struct symbol* symbol_p, char *s){
   for(int i = 0; i < 500; i++){
-    char *current_name = symbol_p[i].name;
+    char* current_name = symbol_p[i].name;
     if(current_name != NULL && strcmp(current_name, s) == 0){
-      // printf("MATCH\n");
-      return symbol_p[i].address;
+      left_operand->name = current_name;
+      left_operand->datatype = symbol_p[i].datatype;
+      left_operand->address = symbol_p[i].address;
+      if(strcmp(left_operand->datatype, "integer") == 0){
+        left_operand->dt_num = DT_INTEGER;
+      }
+      else{
+        left_operand->dt_num = DT_FLOAT;
+      }
+      return;
     }
   }
-  return -1;
 
 }

@@ -159,11 +159,7 @@ algosec : ALGORITHM COLON  algobody
 }
 ;
 
-algobody :
-{
- $$ = NULL;
-}
-| algoline algobody
+algobody : algoline algobody
 {
   $1->next = $2;
   $$ = $1;
@@ -194,19 +190,6 @@ algoline : VARIABLE ASSIGN statement SEMICOLON
 }
 ;
 
-/*
-algholder : VARIABLE
-{
-  $$ = $1;
-}
-| VARIABLE LBRACKET statement RBRACKET
-{
-  $$ = $1;
-  $$->var_array_expresssion = $3;
-}
-;
-*/
-
 statement : statement AND comparison
 {
   $$ = malloc(sizeof(struct expression));
@@ -223,7 +206,7 @@ statement : statement AND comparison
   $$->left_op = $1;
   $$->right_op = $3;
 }
-| NOT statement
+| NOT comparison
 {
   $$ = malloc(sizeof(struct expression));
   $$->kind = EXPR_KIND;
@@ -384,6 +367,18 @@ atom : INT
   $$ = malloc(sizeof(struct expression));
   $$->kind = VAR_KIND;
   $$->var_name = $1;
+  for(int i = 0; i < 500; i++){
+    if(symbol_array[i].name != NULL){
+      if(strcmp($1, symbol_array[i].name) == 0){
+        if(strcmp(symbol_array[i].datatype, "real") == 0){
+          $$->datatype = DT_FLOAT;
+        }
+        else{
+          $$->datatype = DT_INTEGER;
+        }
+      }
+    }
+  }
 }
 | VARIABLE LBRACKET statement RBRACKET
 {

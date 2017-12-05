@@ -1,6 +1,7 @@
 main;
 	data:
-		integer: List[10], X, Y;
+		integer: List[10], Y;
+		real: X;
 	algorithm:
-	X :=  6 & 9.7;
+	X := ((7 + 5) & (9 - 2)) | (6 >= 9);
 end main;
