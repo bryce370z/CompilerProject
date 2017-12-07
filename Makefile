@@ -1,6 +1,6 @@
-a.out: SlicDataParser.y SlicScanner.l main.c
-	bison -y -d SlicDataParser.y
-	flex SlicScanner.l
+a.out: Parser.y Scanner.l main.c
+	bison -y -d Parser.y
+	flex Scanner.l
 	gcc lex.yy.c y.tab.c main.c -ll
 
 clean:

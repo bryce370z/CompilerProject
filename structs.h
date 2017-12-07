@@ -11,14 +11,24 @@ struct symbol {
 
 
 #define STMT_ASSIGN 0
+#define STMT_IF 1
+#define STMT_IF_ELSE 2
+#define STMT_WHILE 3
+#define STMT_PRINT 4
+#define STMT_READ 5
+#define STMT_EXIT 6
+#define STMT_COUNTING 7
 struct statement{
   int kind; // kind of statment {while, if, assignment, etc...}
   char *var; // variable name for assignemnt statment
   int var_address; // variable address for assignment statements
   struct symbol* left_operand;
+  struct symbol* right_operand;
+  struct print* print;
   struct expression* var_array_expresssion;
   struct expression* expression;
   struct statement* body;
+  struct statement* else_body;
   struct statement* next;
 };
 
@@ -48,18 +58,26 @@ struct statement{
 #define DT_INTEGER 1
 #define DT_FLOAT 2
 
-#define NOT_CONVERTED 0
-#define CONVERTED 1
 struct expression{
   int kind; // operation {+, -, /, etc...} or number {5, 5.46, etc...}
   int op_kind; // operation {+, -, /, etc...}
   float value; // number {1,2,3,6.78, etc}
   char *var_name;// name of variable on left side of assign operator
   int datatype; // datatype of node
-  int converted;
   struct symbol* var;
   struct expression* left_op;
   struct expression* right_op;
+};
+
+#define P_EXPR_KIND 0
+#define P_STR_KIND 1
+#define P_NEWLINE_KIND 2
+struct print{
+  int kind;
+  struct expression* p_expr;
+  char* p_string;
+  int newline;
+  struct print* next;
 };
 
 extern struct statement * stmt_list;

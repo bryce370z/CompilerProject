@@ -125,7 +125,7 @@
 
 \n {}
 
-\s {/* Ignore Whitespace */}
+[ \n\t\r]+ {/* Ignore Whitespace */}
 
 ([a-z]|[A-Z])+([a-z]|[A-Z]|[0-9])* { if (DEBUG) printf("VARIABLE %s ", yytext);
                                      yylval.name = strdup(yytext);
@@ -203,10 +203,13 @@
      }
 
 \"(.|"")*\" { if (DEBUG) printf("STRING %s ", yytext);
+              yylval.p_string = strdup(yytext);
               return(STRING);
             }
 
 #.* {}
 
-. {}
+. {printf("TRASH %s ", yytext);
+    return(TRASH);
+  }
 %%

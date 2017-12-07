@@ -8,7 +8,7 @@
   #include <stdlib.h>
   #include <string.h>
   #include "structs.h"
-  #define PRINT_TABLE 1
+  #define PRINT_TABLE 0
 
   /* symbol table */
   struct symbol symbol_array[500];
@@ -22,16 +22,18 @@
 
 %union{
   // symbol table
-  char *name;
-  char *datatype;
-  char *rbracket;
-  char *lbracket;
+  char* name;
+  char* datatype;
+  char* rbracket;
+  char* lbracket;
   int ival;
   float fval;
 
   //AST
-  struct statement *new_statement;
-  struct expression *new_expression;
+  char* p_string;
+  struct statement* new_statement;
+  struct expression* new_expression;
+  struct print* new_print;
 
 }
 
@@ -80,7 +82,8 @@
 %token   OR
 %token   NOT
 %token   ASSIGN
-%token   STRING
+%token  <p_string> STRING
+%token TRASH
 
 // %type <name> algholder
 %type <new_statement> algobody
@@ -91,6 +94,8 @@
 %type <new_expression> term
 %type <new_expression> factor
 %type <new_expression> atom
+%type <new_print> printlist
+%type <new_print> printable
 
 %%
 prog : MAIN SEMICOLON datasec algosec END MAIN SEMICOLON
@@ -187,6 +192,89 @@ algoline : VARIABLE ASSIGN statement SEMICOLON
   $$->var_array_expresssion = $3;
   $$->expression = $6;
   $$->next = NULL;
+}
+| IF statement SEMICOLON algobody END IF SEMICOLON
+{
+  $$ = malloc(sizeof(struct statement));
+  $$->kind = STMT_IF;
+  $$->expression = $2;
+  $$->next = NULL;
+  $$->body = $4;
+}
+| IF statement SEMICOLON algobody ELSE SEMICOLON algobody END IF SEMICOLON
+{
+  $$ = malloc(sizeof(struct statement));
+  $$->kind = STMT_IF_ELSE;
+  $$->expression = $2;
+  $$->next = NULL;
+  $$->body = $4;
+  $$->else_body = $7;
+}
+|  WHILE statement SEMICOLON algobody END WHILE SEMICOLON
+{
+  $$ = malloc(sizeof(struct statement));
+  $$->kind = STMT_WHILE;
+  $$->expression = $2;
+  $$->next = NULL;
+  $$->body = $4;
+}
+| PRINT printlist SEMICOLON
+{
+  $$ = malloc(sizeof(struct statement));
+  $$->kind = STMT_PRINT;
+  $$->print = $2;
+  $$->next = NULL;
+}
+| READ VARIABLE SEMICOLON
+{
+  $$ = malloc(sizeof(struct statement));
+  $$->kind = STMT_READ;
+  $$->var = $2;
+  $$->next = NULL;
+}
+| READ VARIABLE LBRACKET statement RBRACKET SEMICOLON
+{
+  $$ = malloc(sizeof(struct statement));
+  $$->kind = STMT_READ;
+  $$->expression = $4;
+  $$->var = $2;
+  $$->next = NULL;
+}
+| EXIT SEMICOLON
+{
+  $$ = malloc(sizeof(struct statement));
+  $$->kind = STMT_EXIT;
+  $$->next = NULL;
+}
+printlist : printlist COMMA printable
+{
+  $1->next = $3;
+  $$ = $1;
+}
+| printable
+{
+  $$ = $1;
+}
+
+;
+
+printable : statement
+{
+  $$ = malloc(sizeof(struct print));
+  $$->kind = P_EXPR_KIND;
+  $$->p_expr = $1;
+}
+| CARRIAGE_RETURN
+{
+  $$ = malloc(sizeof(struct print));
+  $$->kind = P_NEWLINE_KIND;
+  $$->newline = 1;
+}
+| STRING
+{
+  $$ = malloc(sizeof(struct print));
+  $$->kind = P_STR_KIND;
+  $$->p_string = $1;
 }
 ;
 
@@ -386,6 +474,18 @@ atom : INT
   $$->kind = ARRAY_KIND;
   $$->var_name = $1;
   $$->right_op = $3;
+  for(int i = 0; i < 500; i++){
+    if(symbol_array[i].name != NULL){
+      if(strcmp($1, symbol_array[i].name) == 0){
+        if(strcmp(symbol_array[i].datatype, "real") == 0){
+          $$->datatype = DT_FLOAT;
+        }
+        else{
+          $$->datatype = DT_INTEGER;
+        }
+      }
+    }
+  }
 }
 ;
 

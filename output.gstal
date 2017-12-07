@@ -1,0 +1,29 @@
+name:List address:0 datatype:real kind:array dec
+name:Y address:10 datatype:real kind:scalar
+name:X address:11 datatype:integer kind:scalar
+ISP 12
+LAA 11
+LLI 5
+STO
+LAA 10
+LLI 6
+ITF
+STO
+LAA 11
+LOD
+ITF
+LAA 10
+LOD
+LTF
+JPF 25
+LLI 104
+PTC
+LLI 101
+PTC
+LLI 108
+PTC
+LLI 108
+PTC
+LLI 111
+PTC
+HLT
